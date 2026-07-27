@@ -18,9 +18,16 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Fix RTF files and Build Android App
+    - name: Fix Paths, RTF and Build
       run: |
-        find . -type f \( -name "*.gradle" -o -name "*.properties" -o -name "AndroidManifest.xml" \) -exec sed -i '/\\rtf1/,$!d' {} + || true
+        # Αν υπάρχει διπλός φάκελος, φέρνουμε τα αρχεία στο σωστό επίπεδο
+        if [ -d "Free-Grilly.apk" ]; then
+          cp -r Free-Grilly.apk/* . || true
+        fi
+        
+        # Καθαρισμός όλων των RTF αρχείων από τις κεφαλίδες τους
+        find . -type f \( -name "*.gradle" -o -name "*.properties" -o -name "AndroidManifest.xml" \) -exec sed -i '1{/^{\\rtf/d}' {} + || true
+        
         gradle init --type basic --dsl groovy --test-framework none --project-name "App" --non-interactive || true
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
