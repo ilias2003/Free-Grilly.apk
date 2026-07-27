@@ -1,9 +1,9 @@
-name: Build Android APK
+name: Compile Android APK Now
 
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,11 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Gradle
-      uses: gradle/actions/setup-gradle@v3
-
-    - name: Build APK with Gradle
-      run: gradle assembleDebug
+    - name: Force Gradle Init and Build
+      run: |
+        gradle init --type java-application --dsl kotlin --test-framework none --project-name "Temp" --package "com.temp" --non-interactive || true
+        gradle assembleDebug || ./gradlew assembleDebug || cd app && ../gradlew assembleDebug
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
