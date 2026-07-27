@@ -18,16 +18,22 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Fix Paths, RTF and Build
+    - name: Recreate Gradle Files Cleanly and Build
       run: |
-        # Αν υπάρχει διπλός φάκελος, φέρνουμε τα αρχεία στο σωστό επίπεδο
-        if [ -d "Free-Grilly.apk" ]; then
-          cp -r Free-Grilly.apk/* . || true
-        fi
+        # Διαγραφή των προβληματικών αρχείων RTF που δημιουργούν το σφάλμα
+        rm -f settings.gradle build.gradle app/build.gradle
         
-        # Καθαρισμός όλων των RTF αρχείων από τις κεφαλίδες τους
-        find . -type f \( -name "*.gradle" -o -name "*.properties" -o -name "AndroidManifest.xml" \) -exec sed -i '1{/^{\\rtf/d}' {} + || true
-        
+        # Δημιουργία καθαρού settings.gradle
+        echo 'pluginManagement { repositories { google() mavenCentral() gradlePluginPortal() } }' > settings.gradle
+        echo 'dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) repositories { google() mavenCentral() } }' >> settings.gradle
+        echo 'rootProject.name = "FreeGrillyApp"' >> settings.gradle
+        echo "include ':app'" >> settings.gradle
+
+        # Δημιουργία καθαρού root build.gradle
+        echo 'buildscript { repositories { google() mavenCentral() } dependencies { classpath "com.android.tools.build:gradle:8.1.4" } }' > build.gradle
+        echo 'allprojects { repositories { google() mavenCentral() } }' >> build.gradle
+
+        # Κατέβασμα Gradle Wrapper και Build
         gradle init --type basic --dsl groovy --test-framework none --project-name "App" --non-interactive || true
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
