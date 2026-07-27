@@ -18,8 +18,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build Android App
+    - name: Fix RTF files and Build Android App
       run: |
+        find . -type f \( -name "*.gradle" -o -name "*.properties" -o -name "AndroidManifest.xml" \) -exec sed -i '/\\rtf1/,$!d' {} + || true
         gradle init --type basic --dsl groovy --test-framework none --project-name "App" --non-interactive || true
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
